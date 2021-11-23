@@ -40,18 +40,34 @@ class HasamiShogiGame:
 
     def make_move(self, square_from, square_to):
         """"""
-        current_square = self._board.get_square_occupant(square_from)
-        target_square = self._board.get_square_occupant(square_from)
-
-        if self._active_player != current_square:
-            print('Not active player')
+        # Confirm active player is making move
+        square_from_occupant = self._board.get_piece(square_from)
+        square_from_occupant_color = square_from_occupant.get_color()
+        if self._active_player != square_from_occupant_color:
+            print('Error: Not active player')
             return False
 
+        # Confirm move is Valid: orthogonal and along a clear path
         board_bool = self._board.validate_move(square_from, square_to)
+        if board_bool is False:
+            print('Error: move was not valid')
+
+        # If move is valid, update square occupants
+        current_square = self._board.get_square(square_from)
+        target_square = self._board.get_square(square_to)
+        current_square.set_occupant(None)
+        target_square.set_occupant(square_from_occupant)
+
+        # If move is valid: switch turns
+        if self._active_player == 'BLACK':
+            self._active_player = 'RED'
+        else:
+            self._active_player = 'BLACK'
 
     def get_square_occupant(self, square):
         """"""
-        return self._board.get_square_occupant(square)
+        piece = self._board.get_piece()
+        return piece.get_color()
 
     def generate_pieces(self):
         """"""
@@ -153,7 +169,17 @@ class Board:
                     print_row += '[ ]'
             print(print_row)
 
-    def get_square_occupant(self, square):
+    def get_square(self, square):
+        """"""
+        location = self.board_map(square)
+        row = location[0]
+        column = location[1]
+
+        square = self._board[row][column]
+
+        return square
+
+    def get_piece(self, square):
         """"""
         location = self.board_map(square)
         row = location[0]
@@ -166,55 +192,74 @@ class Board:
         if piece is None:
             return 'NONE'
         else:
-            return piece.get_color()
+            return piece
 
     def validate_move(self, square_from, square_to):
         """"""
-        move_horizontal = False
-        move_vertical = False
-        square_count = 0
-
         current_square = self.board_map(square_from)
         target_square = self.board_map(square_to)
 
-        current_row = current_square[0]
-        current_column = current_square[1]
-        target_row = target_square[0]
-        target_column = target_square[1]
-
-        if current_row == target_row:
-            move_horizontal = True
-
-        if current_column == target_column:
-            move_vertical = True
-
-        if not (move_horizontal or move_vertical):
-            print('Error: pieces can only move vertically or horizontally ')
+        # Checks if move is orthogonal
+        move_direction = self.move_direction(current_square, target_square)
+        if move_direction == 'Invalid':
             return False
-        print('CR:', current_row)
-        print('CC:', current_column)
-        print('TR:', target_row)
-        print('TC:', target_column)
-        print('H:', move_horizontal)
-        print('V:', move_vertical)
 
-        if move_horizontal:
-            square_count = target_column - current_column
-            print(square_count)
+        # Checks if path between squares is clear
+        path = self.empty_path_check(move_direction,current_square, target_square)
+        if path == 'Occupied':
+            return False
 
-        if move_vertical:
-            square_count = target_row - current_row
-            print(square_count)
+        return True
 
-            if square_count < 0:
-                for each in range(-1, square_count-1, -1):
-                    occupant = self._board[current_row + each][current_column].get_occupant()
-                    if occupant is not None:
-                        print("Error: you cannot jump over other pieces")
-                        return False
+    def move_direction(self, current_square, target_square):
+
+        if (current_square[0] != target_square[0]) and (current_square[1] != target_square[1]):
+            move_direction = 'Invalid'
+
+        elif current_square[0] == target_square[0]:
+            if current_square[1] - target_square[1] < 0:
+                move_direction = ('Horizontal', 'Left')
             else:
-                for each in range(1, square_count+1, 1):
-                    print(self._board[current_row + each][current_column].get_occupant())
+                move_direction = ('Horizontal', 'Right')
+
+        elif current_square[1] == target_square[1]:
+            if current_square[0] - target_square[0] < 0:
+                move_direction = ('Vertical', 'Down')
+            else:
+                move_direction = ('Vertical', 'Up')
+
+        return move_direction
+
+    def empty_path_check(self, direction,  current, target):
+        path = 'Clear'
+        c_row = current[0]
+        c_column = current[1]
+        t_row = target[0]
+        t_column = target[1]
+
+        if direction[1] == 'Up':
+            square_list = list(range(c_row - 1, t_row - 1, -1))
+        elif direction[1] == 'Down':
+            square_list = list(range(c_row + 1, t_row + 1, 1))
+        elif direction[1] == 'Left':
+            square_list = list(range(c_column + 1, t_column - 1, -1))
+        else:
+            square_list = list(range(c_column + 1, t_column + 1, 1))
+
+        if direction[0] == 'Vertical':
+            for square in square_list:
+                occupant = self._board[square][c_column].get_occupant()
+                if occupant is not None:
+                    path = 'Occupied'
+                    return path
+        elif direction[0] == 'Horizontal':
+            for square in square_list:
+                occupant = self._board[c_row][square].get_occupant()
+                if occupant is not None:
+                    path = 'Occupied'
+                    return path
+
+        return path
 
 
 class Square:
@@ -294,9 +339,37 @@ class Player:
 
 game = HasamiShogiGame()
 game.print_board()
-#print(game.get_square_occupant('a3'))
-#print(game.get_square_occupant('i7'))
-#print(game.get_square_occupant('f4'))
-#game.make_move('a1','h1')
-game.make_move('i1','f1')
-#game.make_move('i1','h2')
+print('New Game\n')
+
+game.make_move('i1', 'f1')
+game.print_board()
+print('Black moves Vertical Up\n')
+
+game.make_move('a1', 'e1')
+game.print_board()
+print('Red moves Vertical Down\n')
+
+game.make_move('f1', 'f6')
+game.print_board()
+print('Black moves Horizontal Right\n')
+
+game.make_move('e1', 'e9')
+game.print_board()
+print('Red moves Horizontal Right\n')
+
+game.make_move('f6', 'g6')
+game.print_board()
+print('Black moves Vertical Down\n')
+
+game.make_move('e9', 'c9')
+game.print_board()
+print('Red moves Vertical Up\n')
+
+game.make_move('g6', 'g2')
+game.print_board()
+print('Black moves Horizontal Left\n')
+
+game.make_move('c9', 'c5')
+game.print_board()
+print('Red moves Horizontal Left\n')
+
