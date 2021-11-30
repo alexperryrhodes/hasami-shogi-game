@@ -120,7 +120,6 @@ class HasamiShogiGame:
         else:
             self._game_state = 'UNFINISHED'
 
-
     def print_board(self):
         """Asks the Board to call it's print board function"""
         self._board.print_board()
@@ -372,45 +371,3 @@ class Piece:
     def set_status(self, status):
         """Returns the Piece's color"""
         self._status = status
-
-
-def main():
-    game = HasamiShogiGame()
-    game.print_board()
-
-    game.make_move('i4', 'c4')
-
-    game.make_move('a2', 'e2')
-
-    game.make_move('c4', 'c5')
-
-    game.make_move('a4', 'e4')
-
-    game.make_move('i3', 'e3')
-
-    game.make_move('a6', 'b6')
-
-    game.make_move('i5', 'd5')
-
-    game.make_move('b6', 'b5')
-
-    game.make_move('i6', 'e6')
-
-    game.make_move('a7', 'e7')
-
-    game.make_move('i9', 'h9')
-
-    game.make_move('a8', 'f8')
-
-    game.make_move('h9', 'i9')
-
-    game.make_move('f8', 'f5')
-
-    game.make_move('i9', 'h9')
-
-    game.print_board()
-    game.make_move('f5', 'e5')
-    game.print_board()
-
-
-main()
