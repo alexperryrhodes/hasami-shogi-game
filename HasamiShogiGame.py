@@ -111,6 +111,8 @@ class HasamiShogiGame:
         self._active_player = inactive_player
         self._inactive_player = active_player
 
+        return True
+
     def check_winner(self):
         """"""
         if self.get_num_captured_pieces('RED') == 9:
