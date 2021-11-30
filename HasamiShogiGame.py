@@ -94,6 +94,8 @@ class HasamiShogiGame:
 
         # If move is valid, check for capture, then update captures squares and pieces
         captured_squares = self._board.check_capture(str_square_to)
+        corner_captured_squares = self._board.check_corner_capture(str_square_to)
+        captured_squares.append(corner_captured_squares)
         for square_group in captured_squares:
             for square in square_group:
                 piece = square.get_occupant()
@@ -191,25 +193,25 @@ class Board:
         square = self.get_square(str_square)
         square.set_occupant(piece)
 
-    def validate_move(self, str_square_from, str_square_to):
+    def validate_move(self, str_square_from: str, str_square_to: str):
         """Takes in two string location (a1) and returns a boolean in the move between the squares is valid"""
         from_row = self.get_square(str_square_from).get_row()
         from_column = self.get_square(str_square_from).get_column()
         to_row = self.get_square(str_square_to).get_row()
         to_column = self.get_square(str_square_to).get_column()
 
-        direction = self.check_direction(from_row, from_column, to_row, to_column)
+        direction = self._check_direction(from_row, from_column, to_row, to_column)
         if direction is False:
             print('Error: Pieces can only move vertically or horizontally')
             return False
 
-        check_path = self.check_path(direction, from_row, from_column, to_row, to_column)
+        check_path = self._check_path(direction, from_row, from_column, to_row, to_column)
         if check_path is False:
             print('Error: Path between squares contains pieces')
             return False
 
     @staticmethod
-    def check_direction(from_row, from_column, to_row, to_column):
+    def _check_direction(from_row: int, from_column: int, to_row: int, to_column: int):
         """Takes in four coordinates and determines the direction of movement between coordinates"""
         vertical = from_row - to_row
         horizontal = from_column - to_column
@@ -228,7 +230,7 @@ class Board:
 
         return direction
 
-    def check_path(self, direction, from_row, from_column, to_row, to_column):
+    def _check_path(self, direction, from_row: int, from_column: int, to_row: int, to_column: int):
         """Takes in four coordinates and a direction and determines if the path between the coordinates is clear"""
         row_step = direction[0]
         column_step = direction[1]
@@ -247,7 +249,7 @@ class Board:
             if self._board[next_row][next_column] == self._board[to_row][to_column]:
                 step_state = 0
 
-    def check_capture(self, str_square_to):
+    def check_capture(self, str_square_to: str):
         """"""
         row = self.get_square(str_square_to).get_row()
         column = self.get_square(str_square_to).get_column()
@@ -295,6 +297,9 @@ class Board:
                     continue
 
         return captured_squares
+
+    def check_corner_capture(self, str_square_to: str):
+        pass
 
     def print_board(self):
         """Prints the Board object to the console"""
@@ -357,7 +362,7 @@ class Square:
 class Piece:
     """Represents a Piece object within Hasami Shogi"""
 
-    def __init__(self, color):
+    def __init__(self, color: str):
         """"""
         self._color = color
         self._status = 'ACTIVE'
@@ -370,6 +375,6 @@ class Piece:
         """Returns the Piece's color"""
         return self._status
 
-    def set_status(self, status):
+    def set_status(self, status: str):
         """Returns the Piece's color"""
         self._status = status
