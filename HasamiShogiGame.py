@@ -101,12 +101,25 @@ class HasamiShogiGame:
                 square.set_occupant(None)
 
         # Check for winner
+        self.check_winner()
+        if self._game_state != 'UNFINISHED':
+            print(self._game_state)
 
         # If move is valid: switch turns
         active_player = self._active_player
         inactive_player = self._inactive_player
         self._active_player = inactive_player
         self._inactive_player = active_player
+
+    def check_winner(self):
+        """"""
+        if self.get_num_captured_pieces('RED') == 9:
+            self._game_state = 'BLACK_WON'
+        elif self.get_num_captured_pieces('BLACK') == 9:
+            self._game_state = 'RED_WON'
+        else:
+            self._game_state = 'UNFINISHED'
+
 
     def print_board(self):
         """Asks the Board to call it's print board function"""
