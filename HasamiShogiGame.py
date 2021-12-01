@@ -2,6 +2,9 @@
 # Date: 11/22/21
 # Description:
 
+BOARD_SIZE = 9
+
+
 class HasamiShogiGame:
     """Represents a Game object"""
 
@@ -14,7 +17,7 @@ class HasamiShogiGame:
         Sets active player to black player and inactive player to red player
         """
 
-        self._pieces = self.generate_pieces()
+        self._pieces = self._generate_pieces()
 
         self._board = Board(self._pieces)
 
@@ -54,10 +57,10 @@ class HasamiShogiGame:
             return occupant.get_color()
 
     @staticmethod
-    def generate_pieces():
+    def _generate_pieces():
         """Generates a initial list of Piece objects with a specified color"""
         piece_list = []
-        for count in range(9):
+        for count in range(BOARD_SIZE):
             for color in ['RED', 'BLACK']:
                 piece_list.append(Piece(color))
 
@@ -95,15 +98,18 @@ class HasamiShogiGame:
         # If move is valid, check for capture, then update captures squares and pieces
         captured_squares = self._board.check_capture(str_square_to)
         corner_captured_squares = self._board.check_corner_capture(str_square_to)
-        captured_squares.append(corner_captured_squares)
+        captured_squares = captured_squares + corner_captured_squares
         for square_group in captured_squares:
-            for square in square_group:
-                piece = square.get_occupant()
-                piece.set_status('CAPTURED')
-                square.set_occupant(None)
+            for cap_square in square_group:
+                cap_piece = cap_square.get_occupant()
+                cap_piece.set_status('CAPTURED')
+                cap_square.set_occupant(None)
+
+        print(self._active_player, 'moves from', str_square_from, 'to', str_square_to)
+        self.print_board()
 
         # Check for winner
-        self.check_winner()
+        self._check_winner()
         if self._game_state != 'UNFINISHED':
             print(self._game_state)
 
@@ -115,11 +121,11 @@ class HasamiShogiGame:
 
         return True
 
-    def check_winner(self):
+    def _check_winner(self):
         """"""
-        if self.get_num_captured_pieces('RED') == 9:
+        if self.get_num_captured_pieces('RED') == BOARD_SIZE:
             self._game_state = 'BLACK_WON'
-        elif self.get_num_captured_pieces('BLACK') == 9:
+        elif self.get_num_captured_pieces('BLACK') == BOARD_SIZE:
             self._game_state = 'RED_WON'
         else:
             self._game_state = 'UNFINISHED'
@@ -145,40 +151,40 @@ class Board:
         board = []
 
         # Create an empty board
-        for row in range(9):
+        for row in range(BOARD_SIZE):
             board_row = []
-            for column in range(9):
+            for column in range(BOARD_SIZE):
                 board_row.append(Square(row, column, None))
             board.append(list(board_row))
 
         # Designate corner spaces
-        for row_corner in [0, 8]:
-            for column_corner in [0, 8]:
+        for row_corner in [0, BOARD_SIZE-1]:
+            for column_corner in [0, BOARD_SIZE-1]:
                 board[row_corner][column_corner].set_corner(True)
 
         # Place pieces on board
+        top_column = 0
+        bottom_column = 0
         for piece in pieces:
             piece_color = piece.get_color()
-            for column in range(9):
-                if piece_color == 'RED':
-                    board[0][column].set_occupant(piece)
-                elif piece_color == 'BLACK':
-                    board[8][column].set_occupant(piece)
-                else:
-                    continue
+            if piece_color == 'RED':
+                board[0][top_column].set_occupant(piece)
+                top_column += 1
+            elif piece_color == 'BLACK':
+                board[BOARD_SIZE-1][bottom_column].set_occupant(piece)
+                bottom_column += 1
+            else:
+                continue
 
         return board
 
     def get_square(self, str_square: str):
         """Takes in a string location (a1) and returns the Square object at the location"""
-        row_map = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'h': 7, 'i': 8}
-        column_map = {'1': 0, '2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '7': 6, '8': 7, '9': 8}
-
         square_row = str_square[:1]
         square_column = str_square[1:]
 
-        row = row_map.get(square_row)
-        column = column_map.get(square_column)
+        row = ord(square_row) - 97
+        column = int(square_column) - 1
 
         return self._board[row][column]
 
@@ -299,7 +305,81 @@ class Board:
         return captured_squares
 
     def check_corner_capture(self, str_square_to: str):
-        pass
+        """"""
+        row = self.get_square(str_square_to).get_row()
+        column = self.get_square(str_square_to).get_column()
+        piece_color = self.get_square(str_square_to).get_occupant().get_color()
+
+        potential_captures = []
+        captured_squares = []
+
+        for step in zip([-1, 1, 0, 0], [0, 0, -1, 1]):
+            looking_state = 1
+            capture_state = 0
+            next_row = row
+            next_column = column
+            while looking_state == 1 and capture_state == 0:
+                next_row = next_row + step[0]
+                next_column = next_column + step[1]
+
+                # Check if step moves off board, if so move in new direction
+                if next_row > 8 or next_row < 0 or next_column > 8 or next_column < 0:
+                    looking_state = 0
+                    continue
+
+                # Check is next square is occupied, if not, move in new direction
+                square = self._board[next_row][next_column]
+                corner = square.get_corner()
+                occupant = square.get_occupant()
+                if occupant is None or corner is False:
+                    looking_state = 0
+                    continue
+
+                next_color = occupant.get_color()
+
+                # If the next piece is the opposite color add square to potential captures
+                if piece_color != next_color:
+                    potential_captures.append(square)
+
+                else:
+                    looking_state = 0
+                    continue
+
+                if next_row == next_column:
+                    adj_row, adj_column = column, row
+                elif row == 0:
+                    adj_row = row + 1
+                    adj_column = column + 1
+                elif row == 1:
+                    adj_row = row - 1
+                    adj_column = column - 1
+                elif row == BOARD_SIZE - 2:
+                    adj_row = row + 1
+                    adj_column = column + 1
+                elif row == BOARD_SIZE - 1:
+                    adj_row = row - 1
+                    adj_column = column - 1
+
+                adj_square = self._board[adj_row][adj_column]
+                adj_occupant = adj_square.get_occupant()
+                if adj_occupant is None:
+                    looking_state = 0
+                    continue
+
+                adj_color = adj_occupant.get_color()
+
+                # If the next piece is the same color, and at least one opposite color between has been captures
+                # end looking and set potential captures as actual captures
+                if piece_color == adj_color:
+                    capture_state = 1
+                    captured_squares.append(potential_captures)
+                    potential_captures = []
+
+                else:
+                    looking_state = 0
+                    continue
+
+        return captured_squares
 
     def print_board(self):
         """Prints the Board object to the console"""
