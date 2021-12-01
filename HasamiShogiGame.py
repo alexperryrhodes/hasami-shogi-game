@@ -1,9 +1,15 @@
 # Author: Alexandra Rhodes
 # Date: 11/22/21
-# Description:
+# Description: An implementation of Variant 1 of a Hasami Shogi game in which two player can strategically move pieces
+# around a board in order to capture opposing pieces by sandwiching the opposing player's pieces between the active
+# player's pieces. File contains four classes: The game itself, the game board, the spaces on the board and the pieces
+# on the board. The game can be be played on any size board larger than 4x4 by changing the constant below. Game can be
+# players
 
 BOARD_SIZE = 9
-
+GAME_PLAYERS = ['RED', 'BLACK']
+PLAYER_1 = GAME_PLAYERS[0]
+PLAYER_2 = GAME_PLAYERS[1]
 
 class HasamiShogiGame:
     """Represents a Game object"""
@@ -23,8 +29,8 @@ class HasamiShogiGame:
 
         self._game_state = 'UNFINISHED'
 
-        self._active_player = 'BLACK'
-        self._inactive_player = 'RED'
+        self._active_player = PLAYER_2
+        self._inactive_player = PLAYER_1
 
     def get_game_state(self):
         """Returns the game state"""
@@ -61,7 +67,7 @@ class HasamiShogiGame:
         """Generates a initial list of Piece objects with a specified color"""
         piece_list = []
         for count in range(BOARD_SIZE):
-            for color in ['RED', 'BLACK']:
+            for color in GAME_PLAYERS:
                 piece_list.append(Piece(color))
 
         return piece_list
@@ -82,7 +88,7 @@ class HasamiShogiGame:
         # Confirm the active player is making a move
         piece_color = piece.get_color()
         if self._active_player != piece_color:
-            print("Error: Active player is ", self._active_player)
+            print("Error: Active player is", self._active_player)
             return False
 
         # Confirm move is Valid: orthogonal and along a clear path
@@ -95,17 +101,17 @@ class HasamiShogiGame:
         self._board.set_square_occupant(str_square_from, None)
         self._board.set_square_occupant(str_square_to, piece)
 
+        print(self._active_player, 'moves from', str_square_from, 'to', str_square_to)
         # If move is valid, check for capture, then update captures squares and pieces
         captured_squares = self._board.check_capture(str_square_to)
         corner_captured_squares = self._board.check_corner_capture(str_square_to)
         captured_squares = captured_squares + corner_captured_squares
-        for square_group in captured_squares:
-            for cap_square in square_group:
-                cap_piece = cap_square.get_occupant()
-                cap_piece.set_status('CAPTURED')
-                cap_square.set_occupant(None)
+        for cap_square in captured_squares:
+            print(self._inactive_player, 'piece on', chr(cap_square.get_row()+97)+str(cap_square.get_column()+1), 'captured')
+            cap_piece = cap_square.get_occupant()
+            cap_piece.set_status('CAPTURED')
+            cap_square.set_occupant(None)
 
-        print(self._active_player, 'moves from', str_square_from, 'to', str_square_to)
         self.print_board()
 
         # Check for winner
@@ -123,10 +129,10 @@ class HasamiShogiGame:
 
     def _check_winner(self):
         """"""
-        if self.get_num_captured_pieces('RED') == BOARD_SIZE:
-            self._game_state = 'BLACK_WON'
-        elif self.get_num_captured_pieces('BLACK') == BOARD_SIZE:
-            self._game_state = 'RED_WON'
+        if self.get_num_captured_pieces(PLAYER_1) == BOARD_SIZE:
+            self._game_state = PLAYER_2+'_WON'
+        elif self.get_num_captured_pieces(PLAYER_2) == BOARD_SIZE:
+            self._game_state = PLAYER_1+'_WON'
         else:
             self._game_state = 'UNFINISHED'
 
@@ -167,10 +173,10 @@ class Board:
         bottom_column = 0
         for piece in pieces:
             piece_color = piece.get_color()
-            if piece_color == 'RED':
+            if piece_color == PLAYER_1:
                 board[0][top_column].set_occupant(piece)
                 top_column += 1
-            elif piece_color == 'BLACK':
+            elif piece_color == PLAYER_2:
                 board[BOARD_SIZE-1][bottom_column].set_occupant(piece)
                 bottom_column += 1
             else:
@@ -274,7 +280,7 @@ class Board:
                 next_column = next_column + step[1]
 
                 # Check if step moves off board, if so move in new direction
-                if next_row > 8 or next_row < 0 or next_column > 8 or next_column < 0:
+                if next_row > BOARD_SIZE-1 or next_row < 0 or next_column > BOARD_SIZE-1 or next_column < 0:
                     looking_state = 0
                     continue
 
@@ -295,7 +301,7 @@ class Board:
                 # end looking and set potential captures as actual captures
                 elif piece_color == next_color and len(potential_captures) > 0:
                     capture_state = 1
-                    captured_squares.append(potential_captures)
+                    captured_squares.extend(potential_captures)
                     potential_captures = []
 
                 else:
@@ -323,7 +329,7 @@ class Board:
                 next_column = next_column + step[1]
 
                 # Check if step moves off board, if so move in new direction
-                if next_row > 8 or next_row < 0 or next_column > 8 or next_column < 0:
+                if next_row > BOARD_SIZE-1 or next_row < 0 or next_column > BOARD_SIZE-1 or next_column < 0:
                     looking_state = 0
                     continue
 
@@ -372,7 +378,7 @@ class Board:
                 # end looking and set potential captures as actual captures
                 if piece_color == adj_color:
                     capture_state = 1
-                    captured_squares.append(potential_captures)
+                    captured_squares.extend(potential_captures)
                     potential_captures = []
 
                 else:
@@ -384,8 +390,19 @@ class Board:
     def print_board(self):
         """Prints the Board object to the console"""
 
-        row_labels = ['[a]', '[b]', '[c]', '[d]', '[e]', '[f]', '[g]', '[h]', '[i]']
-        column_labels = ['   ', '[1]', '[2]', '[3]', '[4]', '[5]', '[6]', '[7]', '[8]', '[9]']
+        row_labels = [] #['[a]', '[b]', '[c]', '[d]', '[e]', '[f]', '[g]', '[h]', '[i]']
+        column_labels = ['   '] #['   ', '[1]', '[2]', '[3]', '[4]', '[5]', '[6]', '[7]', '[8]', '[9]']
+
+
+        for row in range(BOARD_SIZE):
+            row = chr(row+97)
+            row = '['+row+']'
+            row_labels.append(row)
+
+        for column in range(BOARD_SIZE):
+            column = str(column + 1)
+            column = '['+column+']'
+            column_labels.append(column)
 
         print(''.join(label for label in column_labels))
         for row in zip(row_labels, self._board):
@@ -393,10 +410,10 @@ class Board:
             for square in row[1]:
                 piece = square.get_occupant()
                 if piece is not None:
-                    if piece.get_color() == 'RED':
-                        print_row += '[R]'
-                    elif piece.get_color() == 'BLACK':
-                        print_row += '[B]'
+                    if piece.get_color() == PLAYER_1:
+                        print_row += '['+PLAYER_1[:1]+']'
+                    elif piece.get_color() == PLAYER_2:
+                        print_row += '['+PLAYER_2[:1]+']'
                 else:
                     print_row += '[ ]'
             print(print_row)
