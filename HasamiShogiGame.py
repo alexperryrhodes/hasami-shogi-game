@@ -11,6 +11,7 @@ GAME_PLAYERS = ['RED', 'BLACK']
 PLAYER_1 = GAME_PLAYERS[0]
 PLAYER_2 = GAME_PLAYERS[1]
 
+
 class HasamiShogiGame:
     """Represents a Game object"""
 
@@ -73,7 +74,8 @@ class HasamiShogiGame:
         return piece_list
 
     def make_move(self, str_square_from: str, str_square_to: str):
-        """"""
+        """After first confirming move is valid, make_move moves piece between squares, checks for captures and checks
+        for and updates game state and active player"""
         # Confirm game is still unfinished
         if self._game_state != 'UNFINISHED':
             print("Error: Game has already been won")
@@ -128,10 +130,10 @@ class HasamiShogiGame:
         return True
 
     def _check_winner(self):
-        """"""
-        if self.get_num_captured_pieces(PLAYER_1) == BOARD_SIZE:
+        """Checks if there is a winner meaning the opposing player has one or fewer pieces"""
+        if self.get_num_captured_pieces(PLAYER_1) >= BOARD_SIZE-1:
             self._game_state = PLAYER_2+'_WON'
-        elif self.get_num_captured_pieces(PLAYER_2) == BOARD_SIZE:
+        elif self.get_num_captured_pieces(PLAYER_2) >= BOARD_SIZE-1:
             self._game_state = PLAYER_1+'_WON'
         else:
             self._game_state = 'UNFINISHED'
@@ -262,7 +264,8 @@ class Board:
                 step_state = 0
 
     def check_capture(self, str_square_to: str):
-        """"""
+        """Checks if there are any potential captures by stepping in all four directions around the square and
+        looking for the sandwich patter of the pieces"""
         row = self.get_square(str_square_to).get_row()
         column = self.get_square(str_square_to).get_column()
         piece_color = self.get_square(str_square_to).get_occupant().get_color()
@@ -282,6 +285,7 @@ class Board:
                 # Check if step moves off board, if so move in new direction
                 if next_row > BOARD_SIZE-1 or next_row < 0 or next_column > BOARD_SIZE-1 or next_column < 0:
                     looking_state = 0
+                    potential_captures = []
                     continue
 
                 # Check is next square is occupied, if not, move in new direction
@@ -289,6 +293,7 @@ class Board:
                 occupant = square.get_occupant()
                 if occupant is None:
                     looking_state = 0
+                    potential_captures = []
                     continue
 
                 next_color = occupant.get_color()
@@ -306,12 +311,13 @@ class Board:
 
                 else:
                     looking_state = 0
+                    potential_captures = []
                     continue
 
         return captured_squares
 
     def check_corner_capture(self, str_square_to: str):
-        """"""
+        """Checks specifically to see if a corner capture has occurred"""
         row = self.get_square(str_square_to).get_row()
         column = self.get_square(str_square_to).get_column()
         piece_color = self.get_square(str_square_to).get_occupant().get_color()
@@ -365,6 +371,8 @@ class Board:
                 elif row == BOARD_SIZE - 1:
                     adj_row = row - 1
                     adj_column = column - 1
+                else:
+                    continue
 
                 adj_square = self._board[adj_row][adj_column]
                 adj_occupant = adj_square.get_occupant()
@@ -389,10 +397,8 @@ class Board:
 
     def print_board(self):
         """Prints the Board object to the console"""
-
-        row_labels = [] #['[a]', '[b]', '[c]', '[d]', '[e]', '[f]', '[g]', '[h]', '[i]']
-        column_labels = ['   '] #['   ', '[1]', '[2]', '[3]', '[4]', '[5]', '[6]', '[7]', '[8]', '[9]']
-
+        row_labels = []
+        column_labels = ['   ']
 
         for row in range(BOARD_SIZE):
             row = chr(row+97)

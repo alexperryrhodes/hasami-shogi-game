@@ -5,6 +5,7 @@ GAME_PLAYERS = ['RED', 'BLACK']
 PLAYER_1 = GAME_PLAYERS[0]
 PLAYER_2 = GAME_PLAYERS[1]
 
+
 class MyTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -110,6 +111,63 @@ class MyTestCase(unittest.TestCase):
         self.game.make_move('b2', 'b4')
         self.game.make_move('a2', 'd2')
         self.assertAlmostEqual(1, self.game.get_num_captured_pieces(PLAYER_2))
+
+    def test_win_zero_left(self):
+        self.game.make_move('i1', 'c1')
+        self.game.make_move('a1', 'b1')
+        self.game.make_move('i9', 'c9')
+        self.game.make_move('b1', 'b4')
+        self.game.make_move('c1', 'a1')
+        self.game.make_move('a9', 'b9')
+        self.game.make_move('i5', 'h5')
+        self.game.make_move('b9', 'b5')
+        self.game.make_move('c9', 'a9')
+        self.game.make_move('b4', 'c4')
+        self.game.make_move('a1', 'c1')
+        self.game.make_move('b5', 'c5')
+        self.game.make_move('a9', 'c9')
+        self.game.make_move('c4', 'c2')
+        self.game.make_move('c9', 'c6')
+        self.game.make_move('c5', 'c3')
+        self.assertAlmostEqual('UNFINISHED', self.game.get_game_state())
+        self.game.make_move('c6', 'c4')
+        self.assertAlmostEqual(9, self.game.get_num_captured_pieces(PLAYER_1))
+        self.assertAlmostEqual('BLACK_WON', self.game.get_game_state())
+        self.assertFalse(self.game.make_move('c6', 'c4'))
+
+    def test_win_one_left(self):
+        self.game.make_move('i1', 'c1')
+        self.game.make_move('a1', 'b1')
+        self.game.make_move('i9', 'c9')
+        self.game.make_move('b1', 'b4')
+        self.game.make_move('c1', 'a1')
+        self.game.make_move('a9', 'b9')
+        self.game.make_move('i5', 'h5')
+        self.game.make_move('b9', 'b5')
+        self.game.make_move('c9', 'a9')
+        self.game.make_move('b4', 'c4')
+        self.game.make_move('a1', 'c1')
+        self.game.make_move('b5', 'c5')
+        self.game.make_move('a9', 'c9')
+        self.game.make_move('c4', 'c2')
+        self.game.make_move('c9', 'c6')
+        self.game.make_move('c5', 'd5')
+        self.assertAlmostEqual('UNFINISHED', self.game.get_game_state())
+        self.game.make_move('c6', 'c3')
+        self.assertAlmostEqual(8, self.game.get_num_captured_pieces(PLAYER_1))
+        self.assertAlmostEqual('BLACK_WON', self.game.get_game_state())
+        self.assertFalse(self.game.make_move('c6', 'c4'))
+
+    def test_corner_and_regular_capture(self):
+        self.game.make_move('i1', 'd1')
+        self.game.make_move('a2', 'c2')
+        self.game.make_move('i3', 'b3')
+        self.game.make_move('c2', 'c1')
+        self.game.make_move('i2', 'a2')
+        self.game.make_move('a9', 'b9')
+        self.game.make_move('b3', 'b1')
+        self.assertAlmostEqual(2, self.game.get_num_captured_pieces(PLAYER_1))
+
 
 if __name__ == '__main__':
     unittest.main()
