@@ -4,7 +4,7 @@
 # around a board in order to capture opposing pieces by sandwiching the opposing player's pieces between the active
 # player's pieces. File contains four classes: The game itself, the game board, the spaces on the board and the pieces
 # on the board. The game can be be played on any size board larger than 4x4 by changing the constant below. Game can be
-# players
+# played with two color or two players names by adjusting the constant below.
 
 BOARD_SIZE = 9
 GAME_PLAYERS = ['RED', 'BLACK']
