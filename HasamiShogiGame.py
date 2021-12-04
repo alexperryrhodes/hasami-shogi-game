@@ -4,7 +4,7 @@
 # around a board in order to capture opposing pieces by sandwiching the opposing player's pieces between the active
 # player's pieces. File contains four classes: The game itself, the game board, the spaces on the board and the pieces
 # on the board. The game can be be played on any size board larger than 4x4 by changing the constant below. Game can be
-# played with two color or two players names by adjusting the constant below.
+# played with two colors or two players' names by adjusting the constant below.
 
 BOARD_SIZE = 9
 GAME_PLAYERS = ['RED', 'BLACK']
@@ -17,19 +17,14 @@ class HasamiShogiGame:
 
     def __init__(self):
         """Creates a initial Game object with initial conditions:
-        Generates Red and Black Piece objects
+        Generates a list of Piece objects equal to 2x the size of the board
         Passes list of entire list of Piece objects to Board Object
-        Passes red Pieces to one Player object and black Pieces to another Player object
         Sets game state
-        Sets active player to black player and inactive player to red player
+        Sets active player to Player_2 and inactive player to Player_1
         """
-
         self._pieces = self._generate_pieces()
-
         self._board = Board(self._pieces)
-
         self._game_state = 'UNFINISHED'
-
         self._active_player = PLAYER_2
         self._inactive_player = PLAYER_1
 
@@ -47,7 +42,6 @@ class HasamiShogiGame:
         for piece in self._pieces:
             piece_color = piece.get_color()
             piece_status = piece.get_status()
-
             if piece_color == color and piece_status == 'CAPTURED':
                 num_captured += 1
 
@@ -82,18 +76,18 @@ class HasamiShogiGame:
             return False
 
         # Confirm there is a piece on starting square
-        piece = self._board.get_square_occupant(str_square_from)
-        if piece is None:
+        occupant = self._board.get_square_occupant(str_square_from)
+        if occupant is None:
             print("Error: There is no piece on the staring square")
             return False
 
         # Confirm the active player is making a move
-        piece_color = piece.get_color()
+        piece_color = occupant.get_color()
         if self._active_player != piece_color:
             print("Error: Active player is", self._active_player)
             return False
 
-        # Confirm move is Valid: orthogonal and along a clear path
+        # Confirm move is valid
         valid_move = self._board.validate_move(str_square_from, str_square_to)
         if valid_move is False:
             print('Error: Move was not valid')
@@ -101,10 +95,14 @@ class HasamiShogiGame:
 
         # If move is valid, update square occupants
         self._board.set_square_occupant(str_square_from, None)
-        self._board.set_square_occupant(str_square_to, piece)
+        self._board.set_square_occupant(str_square_to, occupant)
 
+        # Print message to inform player of successful move
         print(self._active_player, 'moves from', str_square_from, 'to', str_square_to)
-        # If move is valid, check for capture, then update captures squares and pieces
+
+        # If move is valid, check for capture
+        # If there are captures print a message
+        # Then update captures squares and pieces
         captured_squares = self._board.check_capture(str_square_to)
         corner_captured_squares = self._board.check_corner_capture(str_square_to)
         captured_squares = captured_squares + corner_captured_squares
@@ -114,9 +112,11 @@ class HasamiShogiGame:
             cap_piece.set_status('CAPTURED')
             cap_square.set_occupant(None)
 
+        # Print board to show updated piece positions
         self.print_board()
 
-        # Check for winner
+        # Check for winner and update game state
+        # If there is a winner, print message
         self._check_winner()
         if self._game_state != 'UNFINISHED':
             print(self._game_state)
@@ -152,10 +152,9 @@ class Board:
 
     @staticmethod
     def _make_initial_board(pieces):
-        """Creates the initial Board objects which is composed of 81 Square objects.
-        It then designates 4 square objects as corner squares and then sets 18 Piece objects
+        """Creates the initial Board objects which is composed of BOARD_SIZE^2 Square objects.
+        It then designates 4 square objects as corner squares and then sets BOARD_SIZE*2 Piece objects
         as occupants of the squares"""
-
         board = []
 
         # Create an empty board
@@ -203,12 +202,12 @@ class Board:
         return occupant
 
     def set_square_occupant(self, str_square: str, piece):
-        """Takes in a string location (a1) and a Piece object and asks that Square to set its occupant to the Piece"""
+        """Takes in a string location (a1) and a Piece object and asks that Square to set its occupant to that Piece"""
         square = self.get_square(str_square)
         square.set_occupant(piece)
 
     def validate_move(self, str_square_from: str, str_square_to: str):
-        """Takes in two string location (a1) and returns a boolean in the move between the squares is valid"""
+        """Takes in two string location (a1) and returns False if the move between the squares is valid"""
         from_row = self.get_square(str_square_from).get_row()
         from_column = self.get_square(str_square_from).get_column()
         to_row = self.get_square(str_square_to).get_row()
@@ -265,7 +264,7 @@ class Board:
 
     def check_capture(self, str_square_to: str):
         """Checks if there are any potential captures by stepping in all four directions around the square and
-        looking for the sandwich patter of the pieces"""
+        looking for the sandwich pattern of the pieces"""
         row = self.get_square(str_square_to).get_row()
         column = self.get_square(str_square_to).get_column()
         piece_color = self.get_square(str_square_to).get_occupant().get_color()
