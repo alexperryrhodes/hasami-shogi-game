@@ -1,7 +1,3 @@
-# Author: Alexandra Rhodes
-# Date: 12/27/21
-# Description:
-
 class Piece:
     """Represents a Piece object within Hasami Shogi"""
 

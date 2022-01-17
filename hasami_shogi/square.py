@@ -1,7 +1,3 @@
-# Author: Alexandra Rhodes
-# Date: 12/27/21
-# Description:
-
 class Square:
     """Represents a Square object within a Hasami Shogi Board Object"""
 
@@ -12,6 +8,8 @@ class Square:
         self._column = column
         self._occupant = occupant
         self._corner = corner
+        self._selected = False
+        self._in_path = False
 
     def get_occupant(self):
         """Returns the Squares current occupant: A Piece object or None"""

@@ -1,7 +1,3 @@
-# Author: Alexandra Rhodes
-# Date: 12/27/21
-# Description:
-
 import pygame.draw
 
 from .square import Square

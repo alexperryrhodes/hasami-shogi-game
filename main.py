@@ -1,7 +1,3 @@
-# Author: Alexandra Rhodes
-# Date: 12/27/21
-# Description:
-
 import pygame
 from hasami_shogi.constants import WIDTH, HEIGHT, SQUARE_SIZE
 from hasami_shogi.board import Board
@@ -19,6 +15,8 @@ def main():
     run = True
     clock = pygame.time.Clock()
     game = Game()
+
+    game._board.print_board()
 
     while run:
         clock.tick(FPS)
