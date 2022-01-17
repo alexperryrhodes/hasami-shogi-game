@@ -7,12 +7,12 @@
 # played with two colors or two players' names by adjusting the constant below.
 
 import pygame
-from hasami_shogi.constants import BOARD_SIZE, GAME_PLAYERS, PLAYER_1, PLAYER_2
-from hasami_shogi.board import Board
-from hasami_shogi.piece import Piece
+from .constants import BOARD_SIZE, GAME_PLAYERS, PLAYER_1, PLAYER_2, WIN
+from .board import Board
+from .piece import Piece
 
 
-class HasamiShogiGame:
+class Game:
     """Represents a Game object"""
 
     def __init__(self):
@@ -27,6 +27,8 @@ class HasamiShogiGame:
         self._game_state = 'UNFINISHED'
         self._active_player = PLAYER_2
         self._inactive_player = PLAYER_1
+        self._win = WIN
+        self._move_state = False
 
     def get_game_state(self):
         """Returns the game state"""
@@ -47,15 +49,11 @@ class HasamiShogiGame:
 
         return num_captured
 
-    def get_square_occupant(self, str_square: str):
-        """Returns the color on a square by asking the Board for it's Square at the parameter location
-        and then the Square checking it's occupant and if the occupant is a Piece, then ask the Piece for it's color
-        otherwise returns None"""
-        occupant = self._board.get_square_occupant(str_square)
-        if occupant is None:
-            return 'NONE'
-        else:
-            return occupant.get_color()
+    def get_square_occupant(self, row:int, column: int):
+        """Returns a Square occupant by asking the Board for it's Square at the row, column 
+        and then the Square checking it's occupant and if the occupant is a Piece, otherwise returns None"""
+        occupant = self._board.get_square_occupant(row,column)
+        return occupant
 
     @staticmethod
     def _generate_pieces():
@@ -67,7 +65,12 @@ class HasamiShogiGame:
 
         return piece_list
 
-    def make_move(self, str_square_from: str, str_square_to: str):
+    def update(self):
+        """Asks the Board object to draw board"""
+        self._board.draw(self._win)
+        pygame.display.update()
+
+    def make_move(self, from_row: int, from_column: int, to_row: int, to_column: int):
         """After first confirming move is valid, make_move moves piece between squares, checks for captures and checks
         for and updates game state and active player"""
         # Confirm game is still unfinished
@@ -76,7 +79,7 @@ class HasamiShogiGame:
             return False
 
         # Confirm there is a piece on starting square
-        occupant = self._board.get_square_occupant(str_square_from)
+        occupant = self._board.get_square_occupant(from_row, from_column)
         if occupant is None:
             print("Error: There is no piece on the staring square")
             return False
@@ -88,23 +91,20 @@ class HasamiShogiGame:
             return False
 
         # Confirm move is valid
-        valid_move = self._board.validate_move(str_square_from, str_square_to)
+        valid_move = self._board.validate_move(from_row, from_column, to_row, to_column)
         if valid_move is False:
             print('Error: Move was not valid')
             return False
 
         # If move is valid, update square occupants
-        self._board.set_square_occupant(str_square_from, None)
-        self._board.set_square_occupant(str_square_to, occupant)
-
-        # Print message to inform player of successful move
-        print(self._active_player, 'moves from', str_square_from, 'to', str_square_to)
+        self._board.set_square_occupant(from_row, from_column, None)
+        self._board.set_square_occupant(to_row, to_column, occupant)
 
         # If move is valid, check for capture
         # If there are captures print a message
         # Then update captures squares and pieces
-        captured_squares = self._board.check_capture(str_square_to)
-        corner_captured_squares = self._board.check_corner_capture(str_square_to)
+        captured_squares = self._board.check_capture(to_row, to_column)
+        corner_captured_squares = self._board.check_corner_capture(to_row, to_column)
         captured_squares = captured_squares + corner_captured_squares
         for cap_square in captured_squares:
             print(self._inactive_player, 'piece on', chr(cap_square.get_row()+97)+str(cap_square.get_column()+1), 'captured')
@@ -112,8 +112,7 @@ class HasamiShogiGame:
             cap_piece.set_status('CAPTURED')
             cap_square.set_occupant(None)
 
-        # Print board to show updated piece positions
-        self.print_board()
+        self._board.print_board()
 
         # Check for winner and update game state
         # If there is a winner, print message

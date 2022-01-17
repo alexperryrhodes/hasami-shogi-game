@@ -1,5 +1,5 @@
 import unittest
-import HasamiShogiGame
+from hasami_shogi import game
 
 GAME_PLAYERS = ['RED', 'BLACK']
 PLAYER_1 = GAME_PLAYERS[0]

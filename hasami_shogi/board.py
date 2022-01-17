@@ -2,8 +2,10 @@
 # Date: 12/27/21
 # Description:
 
-from hasami_shogi.square import Square
-from hasami_shogi.constants import BOARD_SIZE, PLAYER_1, PLAYER_2
+import pygame.draw
+
+from .square import Square
+from .constants import BOARD_SIZE, PLAYER_1, PLAYER_2, BLACK, SQUARE_SIZE, WOOD, BLACK_PIECE, RED_PIECE, PIECE_MARGIN
 
 
 class Board:
@@ -48,33 +50,26 @@ class Board:
 
         return board
 
-    def get_square(self, str_square: str):
-        """Takes in a string location (a1) and returns the Square object at the location"""
-        square_row = str_square[:1]
-        square_column = str_square[1:]
+    def get_board(self):
+        return self._board
 
-        row = ord(square_row) - 97
-        column = int(square_column) - 1
-
+    def get_square(self, row:int, column: int):
+        """Takes in a row and column and returns the Square object at the location"""
         return self._board[row][column]
 
-    def get_square_occupant(self, str_square: str):
+    def get_square_occupant(self, row:int, column: int):
         """Takes in a string location (a1) and asks that Square for it's occupant and returns the occupant"""
-        square = self.get_square(str_square)
+        square = self.get_square(row, column)
         occupant = square.get_occupant()
         return occupant
 
-    def set_square_occupant(self, str_square: str, piece):
-        """Takes in a string location (a1) and a Piece object and asks that Square to set its occupant to that Piece"""
-        square = self.get_square(str_square)
+    def set_square_occupant(self, row:int, column: int, piece):
+        """Takes in a row and column and a Piece object and asks that Square to set its occupant to that Piece"""
+        square = self.get_square(row, column)
         square.set_occupant(piece)
 
-    def validate_move(self, str_square_from: str, str_square_to: str):
+    def validate_move(self, from_row: int, from_column: int, to_row: int, to_column: int):
         """Takes in two string location (a1) and returns False if the move between the squares is valid"""
-        from_row = self.get_square(str_square_from).get_row()
-        from_column = self.get_square(str_square_from).get_column()
-        to_row = self.get_square(str_square_to).get_row()
-        to_column = self.get_square(str_square_to).get_column()
 
         direction = self._check_direction(from_row, from_column, to_row, to_column)
         if direction is False:
@@ -125,12 +120,10 @@ class Board:
             if self._board[next_row][next_column] == self._board[to_row][to_column]:
                 step_state = 0
 
-    def check_capture(self, str_square_to: str):
+    def check_capture(self, row: int, column: int):
         """Checks if there are any potential captures by stepping in all four directions around the square and
         looking for the sandwich pattern of the pieces"""
-        row = self.get_square(str_square_to).get_row()
-        column = self.get_square(str_square_to).get_column()
-        piece_color = self.get_square(str_square_to).get_occupant().get_color()
+        piece_color = self.get_square(row, column).get_occupant().get_color()
 
         potential_captures = []
         captured_squares = []
@@ -178,11 +171,9 @@ class Board:
 
         return captured_squares
 
-    def check_corner_capture(self, str_square_to: str):
+    def check_corner_capture(self,  row: int, column: int):
         """Checks specifically to see if a corner capture has occurred"""
-        row = self.get_square(str_square_to).get_row()
-        column = self.get_square(str_square_to).get_column()
-        piece_color = self.get_square(str_square_to).get_occupant().get_color()
+        piece_color = self.get_square(row, column).get_occupant().get_color()
 
         potential_captures = []
         captured_squares = []
@@ -257,21 +248,39 @@ class Board:
 
         return captured_squares
 
+    def draw(self, win):
+        win.blit(WOOD, (0,0))
+        for line in range(BOARD_SIZE):
+            pygame.draw.line(win, BLACK, (line * 100, 0), (line * 100, BOARD_SIZE * 100))
+            pygame.draw.line(win, BLACK, (0, line * 100), (BOARD_SIZE * 100, line * 100))
+
+        for row in self._board:
+            for square in row:
+                square_row = square.get_row()
+                square_col = square.get_column()
+                piece = square.get_occupant()
+                if piece is not None:
+                    if piece.get_color() == PLAYER_1:
+                        win.blit(RED_PIECE, (square_col*SQUARE_SIZE+PIECE_MARGIN, square_row* SQUARE_SIZE+PIECE_MARGIN))
+                    elif piece.get_color() == PLAYER_2:
+                        win.blit(BLACK_PIECE,(square_col*SQUARE_SIZE+PIECE_MARGIN, square_row* SQUARE_SIZE+PIECE_MARGIN))
+
+
     def print_board(self):
         """Prints the Board object to the console"""
         row_labels = []
         column_labels = ['   ']
-
+    
         for row in range(BOARD_SIZE):
             row = chr(row+97)
             row = '['+row+']'
             row_labels.append(row)
-
+    
         for column in range(BOARD_SIZE):
             column = str(column + 1)
             column = '['+column+']'
             column_labels.append(column)
-
+    
         print(''.join(label for label in column_labels))
         for row in zip(row_labels, self._board):
             print_row = row[0]
