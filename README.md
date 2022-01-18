@@ -16,6 +16,8 @@ After the class concluded, I chose to add onto the game by creating a GUI versio
 
 The project had a few challenges. The biggest challenge was implementing the mouse click logic as two separate clicks needed to be captured. I solved this by creating a move_state data member to game, which allowed mouse clicks to be differentiated. Here is a gif of the game in it's current state:
 
+![](https://raw.githubusercontent.com/alexperryrhodes/hasami-shogi-game/main/hasami_shogi/assets/shogiv1.gif)
+
 
 I want to continue to work on the project. My next steps are:
 - Add more visual cues to uses including:
