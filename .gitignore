@@ -38,10 +38,10 @@ Thumbs.db
 
 # VScode files #
 ######################
-
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
+.idea/*
+
+
+# Directory #
+######################
+/hasami_shogi/__pycache__
